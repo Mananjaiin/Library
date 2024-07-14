@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Books</h1>
+    <form method="get" id="search-form">
+        <div class="form-group">
+            <input type="text" name="q" id="search-input" class="form-control" placeholder="Search by title or author">
+        </div>
+    </form>
+    <div id="search-results">
+    <a href="{% url 'book_new' %}" class="btn btn-primary mb-3">Add New Book</a>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Published Date</th>
+                <th>ISBN</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="books-tbody">
+            {% for book in books %}
+            <tr>
+                <td><a href="{% url 'book_detail' book.pk %}">{{ book.title }}</a></td>
+                <td>{{ book.author }}</td>
+                <td>{{ book.published_date }}</td>
+                <td>{{ book.isbn }}</td>
+                <td>
+                    <a href="{% url 'book_edit' book.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+                    <a href="{% url 'book_delete' book.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    function showMessage(message, type) {
+        var messageDiv = $('#message');
+        messageDiv.removeClass('alert-success alert-danger').addClass('alert-' + type).text(message).show();
+        setTimeout(function() {
+            messageDiv.hide();
+        }, 3000);
+    }
+
+    $('#search-input').on('keyup', function() {
+        var query = $(this).val();
+        $.ajax({
+            url: '{% url "ajax_search" %}',
+            data: { 'q': query },
+            success: function(data) {
+                var booksTbody = $('#books-tbody');
+                booksTbody.empty();
+                if (data.books.length > 0) {
+                    data.books.forEach(function(book) {
+                        var row = '<tr id="book-' + book.id + '">' +
+                                  '<td><a href="/book/' + book.id + '/">' + book.title + '</a></td>' +
+                                  '<td>' + book.author + '</td>' +
+                                  '<td>' + book.published_date + '</td>' +
+                                  '<td>' + book.isbn + '</td>' +
+                                  '<td>' +
+                                      '<a href="/book/' + book.id + '/edit/" class="btn btn-secondary btn-sm">Edit</a>' +
+                                      '<button class="btn btn-danger btn-sm delete-book" data-id="' + book.id + '">Delete</button>' +
+                                  '</td>' +
+                                  '</tr>';
+                        booksTbody.append(row);
+                    });
+                } else {
+                    booksTbody.append('<tr><td colspan="5" class="text-center">No books found</td></tr>');
+                }
+            },
+            error: function() {
+                showMessage('An error occurred while searching for books.', 'danger');
+            }
+        });
+    });
+
+    $(document).on('click', '.delete-book', function() {
+        var bookId = $(this).data('id');
+        if (confirm('Are you sure you want to delete this book?')) {
+            $.ajax({
+                url: '/book/' + bookId + '/delete/',
+                type: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    $('#book-' + bookId).remove();
+                    showMessage('Book deleted successfully!', 'success');
+                },
+                error: function() {
+                    showMessage('An error occurred while deleting the book.', 'danger');
+                }
+            });
+        }
+    });
+});
+</script>
+
+
+{% endblock %}

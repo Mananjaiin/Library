@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ book.title }}</h1>
+    <p><strong>Author:</strong> {{ book.author }}</p>
+    <p><strong>Published Date:</strong> {{ book.published_date }}</p>
+    <p><strong>ISBN:</strong> {{ book.isbn }}</p>
+    <p><strong>Pages:</strong> {{ book.pages }}</p>
+    <p><strong>Language:</strong> {{ book.language }}</p>
+    <p><strong>Publisher:</strong> {{ book.publisher }}</p>
+    {% if book.cover_image %}
+    <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="img-fluid">
+    {% endif %}
+    <a href="{% url 'book_edit' book.pk %}" class="btn btn-secondary mt-3">Edit</a>
+    <a href="{% url 'book_delete' book.pk %}" class="btn btn-danger mt-3">Delete</a>
+    <a href="{% url 'book_list' %}" class="btn btn-primary mt-3">Back to list</a>
+</div>
+{% endblock %}
